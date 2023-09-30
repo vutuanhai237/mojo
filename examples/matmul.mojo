@@ -63,6 +63,23 @@ struct Matrix:
     fn store[nelts: Int](self, y: Int, x: Int, val: SIMD[DType.float32, nelts]):
         return self.data.simd_store[nelts](y * self.cols + x, val)
 
+fn run_matmul_numpy(M: Int, N: Int, K: Int) -> Float64:
+    var gflops: Float64 = 0.0
+    let python = Python()
+    try:
+        Python.add_to_path(".")
+        Python.add_to_path("./examples")
+        let pymatmul_module: PythonObject = Python.import_module("pymatmul")
+        if pymatmul_module:
+            gflops = pymatmul_module.benchmark_matmul_numpy(
+                M, N, K
+            ).to_float64()
+        else:
+            print("pymatmul module not found")
+    except e:
+        print(e.value)
+        pass
+    return gflops
 
 fn run_matmul_python(M: Int, N: Int, K: Int) -> Float64:
     var gflops: Float64 = 0.0
@@ -238,7 +255,8 @@ fn main():
     # Python
     print("Throughput of a 128x128 matrix multiplication in Python: ")
     let python_gflops = run_matmul_python(128, 128, 128)
-    alias M = 512
+    let numpy_gflops = run_matmul_numpy(128, 128, 128)
+    alias M = 128
     # Mojo variants
     benchmark[matmul_naive](
         M,
@@ -246,7 +264,7 @@ fn main():
         M,
         python_gflops,
         (
-            "Throughput of a 512x512 matrix multiplication in Mojo using a"
+            "Throughput of a 128x128 matrix multiplication in Mojo using a"
             " naive algorithm: "
         ),
     )
@@ -256,7 +274,7 @@ fn main():
         M,
         python_gflops,
         (
-            "Throughput of a 512x512 matrix multiplication in Mojo using"
+            "Throughput of a 128x128 matrix multiplication in Mojo using"
             " vectorization: "
         ),
     )
@@ -266,7 +284,7 @@ fn main():
         M,
         python_gflops,
         (
-            "Throughput of a 512x512 matrix multiplication in Mojo using the"
+            "Throughput of a 128x128 matrix multiplication in Mojo using the"
             " stdlib `vectorize`: "
         ),
     )
@@ -276,7 +294,7 @@ fn main():
         M,
         python_gflops,
         (
-            "Throughput of a 512x512 {vectorized + parallelized} matrix"
+            "Throughput of a 128x128 {vectorized + parallelized} matrix"
             " multiplication in Mojo: "
         ),
     )
@@ -286,7 +304,7 @@ fn main():
         M,
         python_gflops,
         (
-            "Throughput of a 512x512 {tiled + vectorized + parallelized} matrix"
+            "Throughput of a 128x128 {tiled + vectorized + parallelized} matrix"
             " multiplication in Mojo: "
         ),
     )
@@ -296,7 +314,7 @@ fn main():
         M,
         python_gflops,
         (
-            "Throughput of a 512x512 {tiled + unrolled + vectorized +"
+            "Throughput of a 128x128 {tiled + unrolled + vectorized +"
             " parallelized} matrix multiplication in Mojo: "
         ),
     )

@@ -16,7 +16,6 @@
 import importlib
 import sys
 import subprocess
-
 if not importlib.find_loader("numpy"):
     print("Numpy not found, installing...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy"])
@@ -43,8 +42,10 @@ def matmul_python(C, A, B):
         for k in range(A.cols):
             for n in range(C.cols):
                 C[m, n] += A[m, k] * B[k, n]
-
-
+def matmul_numpy(A, B):
+    
+    C = np.dot(A, B)
+    return 
 def benchmark_matmul_python(M, N, K):
     A = PyMatrix(list(np.random.rand(M, K)), M, K)
     B = PyMatrix(list(np.random.rand(K, N)), K, N)
@@ -54,7 +55,13 @@ def benchmark_matmul_python(M, N, K):
     print(gflops, "GFLOP/s")
     return gflops
 
-
+def benchmark_matmul_numpy(M, N, K):
+    A = np.random.rand(M, N)
+    B = np.random.rand(N, K)
+    secs = timeit(lambda: matmul_numpy(A, B), number=2) / 2
+    gflops = ((2 * M * N * K) / secs) / 1e9
+    print(gflops, "GFLOP/s")
+    return gflops
 if __name__ == "__main__":
     print("Throughput of a 128x128 matrix multiplication in Python:")
     benchmark_matmul_python(128, 128, 128)
